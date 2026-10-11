@@ -5,6 +5,9 @@ from .reluqp import BATCHED_RELUQP
 def init_QP_solver(solver_type = 'batch_reluqp'):
     if solver_type == 'batch_reluqp':
         return BATCHED_RELUQP()
+    elif solver_type == 'batch_reluqp_noalias':
+        from .reluqp_noalias import BATCHED_RELUQP_NOALIAS
+        return BATCHED_RELUQP_NOALIAS()
     elif solver_type == 'official_reluqp':
         return OFFICIAL_RELUQP()
     elif solver_type == 'proxqp':

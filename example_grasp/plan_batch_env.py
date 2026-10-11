@@ -239,6 +239,13 @@ if __name__ == "__main__":
                 ],
                 dim=-1,
             )
+            if manip_config_data.get("clamp_squeeze_to_joint_limits", False):
+                # Extrapolation may exceed a real hand's permitted workspace.
+                # Use the solver's actual joint order, after root-pose dimensions.
+                limits = grasp_solver.kinematics.get_joint_limits().position
+                squeeze_pose_qpos[..., 7:] = torch.clamp(
+                    squeeze_pose_qpos[..., 7:], min=limits[0, 7:], max=limits[1, 7:]
+                )
             all_hand_pose_qpos = torch.cat(
                 [result.solution, squeeze_pose_qpos.unsqueeze(-2)], dim=-2
             )

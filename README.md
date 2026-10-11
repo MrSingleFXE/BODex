@@ -1,3 +1,7 @@
+## Sharpa Wave support in this fork
+
+Latest configuration: **bare right hand, V3 initialisation, 34 collision spheres**. See [setup, model provenance and full pipeline results](docs/SHARPA.md).
+
 ## News (April 2026):
 
 We have open-sourced the follow-up work Dexonomy [RSS 2025] to [here](https://github.com/JYChen18/Dexonomy). For grasp generation, I highly recommend using Dexonomy — it offers easier customization and better grasp synthesis results.

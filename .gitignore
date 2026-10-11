@@ -214,3 +214,5 @@ src/curobo/content/assets/object
 src/curobo/content/assets/output
 
 debug*
+# Downloaded, hash-verified official Sharpa meshes
+src/curobo/content/assets/robot/sharpa_wave/meshes/
