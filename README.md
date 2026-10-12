@@ -1,6 +1,58 @@
-## Sharpa Wave support in this fork
+# BODex：Sharpa 灵巧手抓取流程
 
-Latest configuration: **bare right hand, V3 initialisation, 34 collision spheres**. See [setup, model provenance and full pipeline results](docs/SHARPA.md).
+本 fork 在原作者 BODex 的基础上接入 **Sharpa Wave 裸右手（22 个关节）**，并打通数据合成、物理筛选、模型训练与评测流程。当前版本使用 **V3 关节初值、34 个碰撞球、α=1、仿真控制器统一 kp=12**，包含关节顺序校验、squeeze 限位、筛选覆盖率检查和多 GPU 训练等实现。
+
+本节介绍本 fork 的新增内容；原作者的项目介绍、安装说明和引用信息完整保留在后半部分。
+
+## 配套仓库
+
+- **[BODex（本仓库）](https://github.com/MrSingleFXE/BODex)**：Sharpa 模型适配、初值与球模型、抓取候选合成。
+- **[DexGraspBench fork](https://github.com/MrSingleFXE/DexGraspBench)**：Sharpa 控制器、物理筛选、成功标签收集和候选成功率统计。
+- **[DexLearn fork](https://github.com/MrSingleFXE/DexLearn)**：Sharpa 数据加载、nflow 多 GPU 训练和模型候选采样评测。
+
+## 简明复现流程
+
+**DGN_2k 场景 → 合成候选 → 仿真筛选与标签收集 → 模型训练 → 全候选物理评测。**
+
+先按三个仓库的安装说明配置各自环境，准备共享的 DGN_2k 场景、物体资产和匹配点云，使用官方 80/20 对象划分。资产路径、下载方式和全部参数见 **[完整中文复现指南](docs/SHARPA_PIPELINE.md)**。以下命令在各步骤对应的仓库根目录、相应 Python 环境中运行；`RUN` 设置为同一个绝对输出路径，示例中的其他绝对路径也需替换。
+
+1. **合成（BODex）**：下载官方网格，然后用 V3／34 球配置生成每场景 20 条候选。
+
+   ```bash
+   export RUN=/absolute/path/to/runs/sharpa_v3_s34
+   python example_grasp/download_sharpa_assets.py
+   python example_grasp/sharpa_multi_gpu.py --output "$RUN/synthesis" --gpus 0,1,2,3,4,5,6,7
+   ```
+
+2. **筛选（DexGraspBench）**：用 kp=12 控制器评测全部候选，检查覆盖率并收集成功标签。
+
+   ```bash
+   python script/download_sharpa_assets.py
+   python script/run_sharpa.py --raw "$RUN/synthesis/grasp_data" --output "$RUN/screening" \
+     --expected-scenes 54148 --candidates-per-scene 20 --workers 192 --collect
+   ```
+
+3. **训练（DexLearn）**：使用筛选后的标签进行八卡 nflow 训练，共 50,000 steps。
+
+   ```bash
+   CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/train_sharpa.sh \
+     "$RUN/screening/succ_collect" sharpa_v3_s34_kp12_alpha1
+   ```
+
+4. **评测（DexLearn 调用 Bench）**：对模型生成的每场景 100 条候选全部做物理评测，可在 CPU 上运行。
+
+   ```bash
+   python scripts/evaluate_sharpa.py \
+     --experiment bodex_tabletop_sharpa_right_nflow_sharpa_v3_s34_kp12_alpha1 \
+     --bench /absolute/path/to/DexGraspBench --bench-python /absolute/path/to/bench/env/bin/python \
+     --output "$RUN/evaluation" --jobs 5 --workers 40
+   ```
+
+上述是全量配置；首次运行建议先按完整指南做两场景检查，并按 GPU、CPU 和内存资源调整并行数。已完成实验的合成候选筛选成功率为 **69.68%**，50k 模型的全候选成功率为 **57.87%**；具体协议、优化历史及结果解释见 [Sharpa 配置与实验说明](docs/SHARPA.md)，发布检查范围见 [验证记录](docs/VALIDATION.md)。数据集、生成数据、训练权重和大体积可视化输出不包含在仓库中。
+
+---
+
+# 原作者 README（以下保留原文）
 
 ## News (April 2026):
 
