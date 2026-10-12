@@ -8,7 +8,7 @@ Install BODex and prepare its DGN_2k tabletop object assets using the upstream R
 
 ```bash
 python example_grasp/download_sharpa_assets.py
-python example_grasp/plan_batch_env.py -c src/curobo/content/configs/manip/sharpa_right/tabletop.yml -f output/sharpa_v3_s34 -m npy -w 20
+python example_grasp/sharpa_synthesis.py -c "$PWD/src/curobo/content/configs/manip/sharpa_right/tabletop.yml" -f output/sharpa_v3_s34 -m npy -w 20
 ```
 
 The configuration generates 20 candidates per scene. For a small first run, copy the YAML and set `world.end: 2`. Use a fresh output directory. Squeeze uses the existing alpha=1 extrapolation with joint-limit clipping enabled for this configuration.
@@ -42,11 +42,11 @@ Screening covers 54,148 scenes × 20 = 1,082,960 candidates. Training uses nflow
 
 Both full runs use **uniform kp=12, damping ratio=0.9, alpha=1**, preserving per-joint torque caps. kp is a **DexGraspBench controller parameter**, not a BODex synthesis parameter. These full-run gains combine initialisation and sphere changes, and are not an isolated sphere ablation or multiple-training-seed estimate. The matched 1,000-scene sphere ablation at fixed V3/kp12/alpha1 yielded 66.555% for 147 spheres and 69.765% for 34 spheres.
 
-The full experiments used deterministic mesh-surface sampling; stock upstream sampling may produce different individual candidates. Rates above are archived experimental results, not guarantees for a fresh run.
+The full experiments used deterministic mesh-surface sampling; `example_grasp/sharpa_synthesis.py` now publishes that sampler and seed audit. Stock upstream sampling may produce different individual candidates. Rates above are archived experimental results, not guarantees for a fresh run.
 
 ## Companion repositories
 
-DexGraspBench and DexLearn require Sharpa-specific changes beyond this BODex fork: hand/controller XML, identity-aware pose conversion, preserved fingertip contacts and joint torque caps, larger MuJoCo arena allocation, Sharpa dataset configuration and checkpoint identity checks. Those companion integrations and trained weights are **not included in this release**. Running this fork alone reproduces synthesis functionality, not the entire screening/training benchmark.
+The companion integrations are now published: [DexGraspBench](https://github.com/MrSingleFXE/DexGraspBench) and [DexLearn](https://github.com/MrSingleFXE/DexLearn). See [the complete reproduction guide](SHARPA_PIPELINE.md) for asset setup, screened-label collection, eight-GPU training and all-candidate evaluation. Trained weights and generated datasets are not bundled.
 
 ## Development history
 
